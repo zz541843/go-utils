@@ -1,4 +1,4 @@
-package jz
+package jz1
 
 import (
 	"bytes"
