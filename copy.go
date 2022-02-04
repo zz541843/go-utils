@@ -1,4 +1,4 @@
-package jz1
+package jz
 
 import (
 	"errors"
