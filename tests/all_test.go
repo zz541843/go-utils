@@ -1,8 +1,6 @@
 package tests
 
 import (
-	"database/sql"
-	"database/sql/driver"
 	"fmt"
 	jz "github.com/zz541843/go-utils"
 	"reflect"
@@ -18,7 +16,7 @@ type B struct {
 	Arr string
 }
 
-func (a *myString) Scan(value interface{}) error {
+func (a *myString) JzScan(value interface{}) error {
 	v, flag := value.(string)
 	if flag {
 		*a = myString(v)
@@ -28,13 +26,13 @@ func (a *myString) Scan(value interface{}) error {
 }
 
 // Value return json value, implement driver.Valuer interface
-func (a myString) Value() (driver.Value, error) {
+func (a myString) JzValue() (interface{}, error) {
 	return string(a), nil
 }
 func TestA(t *testing.T) {
 	a := A{}
 	b := B{
-		Arr: "4",
+		Arr: "12",
 	}
 	jzCopy := jz.NewCopy()
 	/*jzCopy.HandlerFuncMap["tests.myString"] = func(i interface{}) (result interface{}, err error) {
@@ -54,16 +52,20 @@ func TestA(t *testing.T) {
 		}
 	}*/
 	//jzCopy.ComplexSkip = false
+	//err := jzCopy.StructCopy(&b, a)
 	err := jzCopy.StructCopy(&a, b)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	jz.PrintStruct(b)
+	jz.PrintStruct(a)
 }
 
 func TestB(t *testing.T) {
-	var a myString
-	a = "1"
-	fmt.Println(reflect.TypeOf(a).Implements(reflect.TypeOf((*sql.Scanner)(nil)).Elem()))
+	var a int16
+	a = 1
+	n := reflect.New(reflect.TypeOf(a))
+	n.Elem().SetInt(13766)
+	fmt.Println(n.Elem())
+	fmt.Println(n.Type())
 }

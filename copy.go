@@ -1,8 +1,6 @@
 package jz
 
 import (
-	"database/sql"
-	"database/sql/driver"
 	"errors"
 	"fmt"
 	"reflect"
@@ -148,28 +146,72 @@ func (c *jzCopy) Map2Struct(tar interface{}, srcMap map[string]interface{}) (err
 		// 如果在这里，初步认定， 是基础类型
 		// 如果对基础类型做了封装，可以进行赋值，因为封装了还是基础类型， 所以要使用kind
 		// 类型不一致,则不赋值
+
 		if srcMapCurrentValue.Type().Kind() != tarFieldValue.Type().Kind() {
 			continue
 		}
 
 		// TODO 限制 tar基本字段必须是基本类型，复杂类型不支持？？？
 
-		var newVal interface{}
+		// 此时，数组也会在这里，但不需要管，因为默认能直接互相转换
+		var newSrc interface{}
 		if srcMapCurrentValue.Type() != tarFieldValue.Type() {
+			// 进到这里，要么是tar是复杂类型，要么是src是复杂类型
+			newSrc = srcMapCurrentValue.Interface()
+			if IsBasicType(newSrc) {
+				newTar := reflect.New(tarFieldType.Type)
+				switch srcMapCurrentValue.Type().Kind() {
+				case reflect.String:
+					newTar.Elem().SetString(srcMapCurrentValue.String())
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+					newTar.Elem().SetInt(srcMapCurrentValue.Int())
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					newTar.Elem().SetUint(srcMapCurrentValue.Uint())
+				}
+				newSrc = newTar.Elem().Interface()
+			} else if IsBasicType(tarFieldValue.Interface()) {
+				switch srcMapCurrentValue.Type().Kind() {
+				case reflect.String:
+					newSrc = srcMapCurrentValue.String()
+				case reflect.Int:
+					newSrc = srcMapCurrentValue.Int()
+				case reflect.Int8:
+					newSrc = int8(srcMapCurrentValue.Int())
+				case reflect.Int16:
+					newSrc = int16(srcMapCurrentValue.Int())
+				case reflect.Int32:
+					newSrc = int32(srcMapCurrentValue.Int())
+				case reflect.Int64:
+					newSrc = int64(srcMapCurrentValue.Int())
+				case reflect.Uint:
+					newSrc = uint(srcMapCurrentValue.Uint())
+				case reflect.Uint8:
+					newSrc = uint8(srcMapCurrentValue.Uint())
+				case reflect.Uint16:
+					newSrc = uint16(srcMapCurrentValue.Uint())
+				case reflect.Uint32:
+					newSrc = uint32(srcMapCurrentValue.Uint())
+				case reflect.Uint64:
+					newSrc = uint64(srcMapCurrentValue.Uint())
+				}
+			} else {
+				return fmt.Errorf("居然有第三种情况？？")
+			}
+
 			// 第二种方案 实现Scanner 和Valuer
-			newVal = srcMapCurrentValue.Interface()
-			fmt.Println(srcMapCurrentValue.Type())
-			if srcMapCurrentValue.Type().Implements(reflect.TypeOf((*driver.Valuer)(nil)).Elem()) {
-				newVal, _ = srcMapCurrentValue.Interface().(driver.Valuer).Value()
+			/*fmt.Println(srcMapCurrentValue.Type())
+			if srcMapCurrentValue.Type().Implements(reflect.TypeOf((*JzCopyValue)(nil)).Elem()) {
+				newVal, _ = srcMapCurrentValue.Interface().(JzCopyValue).JzValue()
 			}
 			fmt.Println(reflect.New(tarFieldValue.Type()).Type())
 			//fmt.Println(reflect.New(tarFieldValue.Type()).Type().Elem())
-			if reflect.New(tarFieldValue.Type()).Type().Implements(reflect.TypeOf((*sql.Scanner)(nil)).Elem()) {
-				err := reflect.New(tarFieldValue.Type()).Elem().Interface().(sql.Scanner).Scan(srcMapCurrentValue.Interface())
+			if reflect.New(tarFieldValue.Type()).Type().Implements(reflect.TypeOf((*JzCopyScan)(nil)).Elem()) {
+				err := reflect.New(tarFieldValue.Type()).Elem().Interface().(JzCopyScan).JzScan(srcMapCurrentValue.Interface())
 				if err != nil {
 					return err
 				}
-			}
+			}*/
+
 			/*// 不处理复杂类型转换
 			if c.ComplexSkip {
 				continue
@@ -187,33 +229,26 @@ func (c *jzCopy) Map2Struct(tar interface{}, srcMap map[string]interface{}) (err
 				return fmt.Errorf(srcMapCurrentValue.Type().String() + "没有对应的HandlerFunc")
 			}*/
 		}
-		tarFieldValue.Set(reflect.ValueOf(newVal))
+		//tarFieldValue.Set(reflect.ValueOf(newVal))
 		/*var setValue reflect.Value
-		switch srcMapCurrentValue.Type().Kind() {
-		case reflect.String:
-			setValue = reflect.ValueOf(srcMapCurrentValue.String())
-		case reflect.Int:
-			setValue = reflect.ValueOf(int(srcMapCurrentValue.Int()))
-		case reflect.Int8:
-			setValue = reflect.ValueOf(int8(srcMapCurrentValue.Int()))
-		case reflect.Int16:
-			setValue = reflect.ValueOf(int16(srcMapCurrentValue.Int()))
-		case reflect.Int32:
-			setValue = reflect.ValueOf(int32(srcMapCurrentValue.Int()))
-		case reflect.Int64:
-			setValue = reflect.ValueOf(srcMapCurrentValue.Int())
-		case reflect.Uint:
-			setValue = reflect.ValueOf(uint(srcMapCurrentValue.Int()))
-		case reflect.Uint8:
-			setValue = reflect.ValueOf(uint8(srcMapCurrentValue.Int()))
-		case reflect.Uint16:
-			setValue = reflect.ValueOf(uint16(srcMapCurrentValue.Int()))
-		case reflect.Uint32:
-			setValue = reflect.ValueOf(uint32(srcMapCurrentValue.Int()))
-		case reflect.Uint64:
-			setValue = reflect.ValueOf(uint64(srcMapCurrentValue.Int()))
-		}*/
-
+		 */
+		tarFieldValue.Set(reflect.ValueOf(newSrc))
 	}
 	return
+}
+
+type JzCopyScan interface {
+	JzScan(value interface{}) error
+}
+type JzCopyValue interface {
+	JzValue() (value interface{}, err error)
+}
+
+func IsBasicType(in interface{}) (b bool) {
+	switch in.(type) {
+	case string, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64, bool:
+		return true
+	default:
+		return false
+	}
 }
