@@ -7,20 +7,17 @@ import (
 )
 
 type jzCopy struct {
-	ComplexSkip    bool
-	HandlerFuncMap map[string]HandlerFunc
+	Cover bool
 }
 type HandlerFunc func(interface{}) (result interface{}, err error)
 
 func NewCopy() *jzCopy {
-	return &jzCopy{
-		ComplexSkip:    true,
-		HandlerFuncMap: map[string]HandlerFunc{},
-	}
+	return &jzCopy{}
 }
-func (c *jzCopy) SetHandlerFuncMap(key string, handler HandlerFunc) {
-	c.HandlerFuncMap[key] = handler
-}
+
+//func (c *jzCopy) SetHandlerFuncMap(key string, handler HandlerFunc) {
+//	c.HandlerFuncMap[key] = handler
+//}
 func (c *jzCopy) Struct2Map(src interface{}) (resMap map[string]interface{}) {
 	resMap = make(map[string]interface{}, 1<<4)
 	numSrcField := reflect.TypeOf(src).NumField()
@@ -151,10 +148,14 @@ func (c *jzCopy) Map2Struct(tar interface{}, srcMap map[string]interface{}) (err
 			continue
 		}
 
+		// src为空值时 是否覆盖tar
+		if srcMapCurrentValue.IsZero() && !c.Cover {
+			continue
+		}
 		// TODO 限制 tar基本字段必须是基本类型，复杂类型不支持？？？
 
 		// 此时，数组也会在这里，但不需要管，因为默认能直接互相转换
-		var newSrc interface{}
+		newSrc := srcMapCurrentValue.Interface()
 		if srcMapCurrentValue.Type() != tarFieldValue.Type() {
 			// 进到这里，要么是tar是复杂类型，要么是src是复杂类型
 			newSrc = srcMapCurrentValue.Interface()
