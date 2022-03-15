@@ -30,7 +30,7 @@ func (c *jzCopy) Struct2Map(src interface{}) (resMap map[string]interface{}) {
 		// 结构体 递归
 		if reflect.TypeOf(src).Field(index).Type.Kind() == reflect.Struct {
 			// TODO 匿名结构体 暂时不管
-			if !reflect.TypeOf(src).Field(index).Anonymous {
+			if reflect.TypeOf(src).Field(index).Anonymous {
 				fieldValue = c.Struct2Map(reflect.ValueOf(src).Field(index).Interface())
 			}
 

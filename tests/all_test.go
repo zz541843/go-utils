@@ -10,10 +10,13 @@ import (
 type myString string
 type myStringArr []string
 type A struct {
-	Num int64
+	DD
+}
+type DD struct {
+	Name string
 }
 type B struct {
-	Num int64
+	DD
 }
 
 func (a *myString) JzScan(value interface{}) error {
@@ -32,7 +35,9 @@ func (a myString) JzValue() (interface{}, error) {
 func TestA(t *testing.T) {
 	a := A{}
 	b := B{
-		Num: 1,
+		DD: DD{
+			Name: "1",
+		},
 	}
 	jzCopy := jz.NewCopy()
 	/*jzCopy.HandlerFuncMap["tests.myString"] = func(i interface{}) (result interface{}, err error) {
