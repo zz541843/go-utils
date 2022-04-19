@@ -10,9 +10,14 @@ type jzCopy struct {
 	Cover bool
 }
 type HandlerFunc func(interface{}) (result interface{}, err error)
+type CopyConfig struct {
+	Cover bool // src空值是否覆盖tar
+}
 
-func NewCopy() *jzCopy {
-	return &jzCopy{}
+func NewCopy(cfg CopyConfig) *jzCopy {
+	return &jzCopy{
+		Cover: cfg.Cover,
+	}
 }
 
 //func (c *jzCopy) SetHandlerFuncMap(key string, handler HandlerFunc) {
