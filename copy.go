@@ -6,24 +6,15 @@ import (
 	"reflect"
 )
 
-type jzCopy struct {
+type Copier struct {
 	Cover bool
 }
 type HandlerFunc func(interface{}) (result interface{}, err error)
-type CopyConfig struct {
-	Cover bool // src空值是否覆盖tar
-}
 
-func NewCopy(cfg CopyConfig) *jzCopy {
-	return &jzCopy{
-		Cover: cfg.Cover,
-	}
-}
-
-//func (c *jzCopy) SetHandlerFuncMap(key string, handler HandlerFunc) {
+//func (c *Copier) SetHandlerFuncMap(key string, handler HandlerFunc) {
 //	c.HandlerFuncMap[key] = handler
 //}
-func (c *jzCopy) Struct2Map(src interface{}) (resMap map[string]interface{}) {
+func (c *Copier) Struct2Map(src interface{}) (resMap map[string]interface{}) {
 	resMap = make(map[string]interface{}, 1<<4)
 	numSrcField := reflect.TypeOf(src).NumField()
 	for index := 0; index < numSrcField; index++ {
@@ -61,7 +52,7 @@ func (c *jzCopy) Struct2Map(src interface{}) (resMap map[string]interface{}) {
 
 // StructCopy 相同字段结构体拷贝
 // tar 目标指针，src 源
-func (c *jzCopy) StructCopy(tar interface{}, src interface{}) (err error) {
+func (c *Copier) StructCopy(tar interface{}, src interface{}) (err error) {
 
 	//类型判定
 	// tar 必须是指针
@@ -98,7 +89,7 @@ func (c *jzCopy) StructCopy(tar interface{}, src interface{}) (err error) {
 
 // Map2Struct map转结构体
 // tar 必须是结构体指针
-func (c *jzCopy) Map2Struct(tar interface{}, srcMap map[string]interface{}) (err error) {
+func (c *Copier) Map2Struct(tar interface{}, srcMap map[string]interface{}) (err error) {
 	if reflect.TypeOf(tar).Kind() != reflect.Ptr && reflect.TypeOf(tar).Elem().Kind() != reflect.Struct {
 		err = errors.New("tar value not a struct pointer")
 		return
