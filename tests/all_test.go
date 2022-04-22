@@ -2,9 +2,10 @@ package tests
 
 import (
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	jz "github.com/zz541843/go-utils"
-	"reflect"
 	"testing"
+	"time"
 )
 
 type myString string
@@ -39,7 +40,7 @@ func TestA(t *testing.T) {
 			Name: "1",
 		},
 	}
-	jzCopy := jz.NewCopy()
+	jzCopy := jz.Copier{}
 	/*jzCopy.HandlerFuncMap["tests.myString"] = func(i interface{}) (result interface{}, err error) {
 		str, flag := i.(myString)
 		if flag {
@@ -66,9 +67,26 @@ func TestA(t *testing.T) {
 	jz.PrintStruct(a)
 }
 
+type Teacher struct {
+	Name Mystring
+	Time MyTime
+}
+type Student struct {
+	Name string
+	Time time.Time
+}
+type Mystring string
+type MyTime time.Time
+
 func TestB(t *testing.T) {
-	var a int16
-	var b A
-	fmt.Println(reflect.ValueOf(a).IsZero())
-	fmt.Println(reflect.ValueOf(b).IsNil())
+	tt := Teacher{}
+	ss := Student{
+		Name: "1",
+		Time: time.Now(),
+	}
+	jzCopy := jz.Copier{}
+	jzCopy.StructCopy(&tt, ss)
+
+	spew.Dump(ss)
+	spew.Dump(tt)
 }
